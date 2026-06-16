@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>K-Star Connect</title>
+<link rel="stylesheet" href="Style.css">
+<script src="/socket.io/socket.io.js" defer></script>
+<script src="Script.js" defer></script>
+</head>
+<body>
+
+<header class="app-header">
+<div>
+<h1>K-Star Connect</h1>
+<p>Idol communities, fan moments, votes, tickets, and merch in one place.</p>
+</div>
+<div class="header-actions app-only">
+<button id="darkModeToggle" class="ghost-btn" type="button">Dark mode</button>
+<button id="notifyBtn" class="ghost-btn" type="button">Notifications <span id="notificationCount">0</span></button>
+<button id="logoutBtn" class="ghost-btn" type="button">Logout</button>
+</div>
+</header>
+
+<nav class="top-nav app-only" aria-label="Main navigation">
+<a href="#communities">Home</a>
+<a href="#communities">Communities</a>
+<a href="#chat">Chat</a>
+<a href="#vote">Vote</a>
+<a href="#live">Live</a>
+<a href="#tickets">Tickets</a>
+<a href="#store">Store</a>
+<a href="#badges">Badges</a>
+</nav>
+
+<main class="page-shell">
+<section id="auth" class="section-grid auth-grid">
+<div class="panel">
+<h2>Fan Access</h2>
+<p class="muted">Create an account or sign in to personalize your fan hub.</p>
+<form id="authForm" class="stacked-form">
+<label for="fanName">Fan name</label>
+<input id="fanName" type="text" placeholder="Mina Moon" required>
+<label for="fanEmail">Email</label>
+<input id="fanEmail" type="email" placeholder="fan@example.com" required>
+<label for="fanPassword">Password</label>
+<input id="fanPassword" type="password" placeholder="At least 6 characters" minlength="6" required>
+<div class="button-row">
+<button type="submit" data-mode="login">Login</button>
+<button type="submit" data-mode="signup" class="secondary-btn">Sign up</button>
+</div>
+</form>
+</div>
+
+<aside class="panel fan-summary">
+<span class="eyebrow">Current Fan</span>
+<h2 id="currentFanName">Guest Fan</h2>
+<p id="currentFanEmail" class="muted">Sign in to unlock badges, orders, votes, and comments.</p>
+</aside>
+</section>
+
+<div id="appContent" class="app-content app-only">
+<section id="communities" class="panel">
+<div class="section-heading">
+<div>
+<span class="eyebrow">Communities</span>
+<h2>Choose Your Idol Circle</h2>
+</div>
+<span id="selectedCommunityLabel" class="pill">BTS V Crew</span>
+</div>
+<div id="idolGrid" class="idol-grid"></div>
+</section>
+
+<section class="section-grid">
+<article class="panel post-section">
+<div class="section-heading">
+<div>
+<span class="eyebrow">Fan Feed</span>
+<h2>Create Post</h2>
+</div>
+<span><strong id="postsCount">0</strong> posts</span>
+</div>
+<textarea id="postInput" placeholder="Share an update with your community..."></textarea>
+<button id="createPostBtn" type="button">Post update</button>
+<div id="posts" class="feed-list"></div>
+</article>
+
+<aside id="chat" class="panel chat-panel">
+<div class="section-heading">
+<div>
+<span class="eyebrow">Socket.io Chat</span>
+<h2>Live Fan Chat</h2>
+</div>
+<span id="chatStatus" class="status-dot">Offline demo</span>
+</div>
+<div id="chatMessages" class="chat-messages" aria-live="polite"></div>
+<form id="chatForm" class="chat-form">
+<input id="chatInput" type="text" placeholder="Send a message..." autocomplete="off">
+<button type="submit">Send</button>
+</form>
+</aside>
+</section>
+
+<section id="vote" class="panel">
+<div class="section-heading">
+<div>
+<span class="eyebrow">Voting</span>
+<h2>Fan Choice Stage</h2>
+</div>
+<span id="totalVotes" class="pill">0 votes</span>
+</div>
+<div id="voteGrid" class="vote-grid"></div>
+</section>
+
+<section id="live" class="panel live-panel">
+<div class="live-stage">
+<div class="live-video">
+<span class="live-badge">LIVE</span>
+<h2 id="liveTitle">Seoul Night Rehearsal</h2>
+<p id="liveMeta">Streaming today at 8:00 PM KST</p>
+</div>
+<div class="live-info">
+<span class="eyebrow">Live Streaming</span>
+<h2>Watch Party</h2>
+<p class="muted">Join the official community stream, chat with fans, and collect live attendance points.</p>
+<button id="joinLiveBtn" type="button">Join stream</button>
+<p id="viewerCount" class="metric">2,481 fans waiting</p>
+</div>
+</div>
+</section>
+
+<section id="tickets" class="panel">
+<div class="section-heading">
+<div>
+<span class="eyebrow">Concerts</span>
+<h2>Ticket Booking</h2>
+</div>
+<span id="ticketTotal" class="pill">$0 selected</span>
+</div>
+<div id="ticketGrid" class="ticket-grid"></div>
+<button id="bookTicketsBtn" type="button">Book selected tickets</button>
+</section>
+
+<section id="store" class="panel">
+<div class="section-heading">
+<div>
+<span class="eyebrow">Merch</span>
+<h2>Official Store</h2>
+</div>
+<span id="cartCount" class="pill">0 items</span>
+</div>
+<div id="merchGrid" class="merch-grid"></div>
+</section>
+
+<section id="badges" class="panel">
+<div class="section-heading">
+<div>
+<span class="eyebrow">Achievements</span>
+<h2>Fan Badges</h2>
+</div>
+<span id="fanPoints" class="pill">0 points</span>
+</div>
+<div id="badgeGrid" class="badge-grid"></div>
+</section>
+</div>
+</main>
+
+<div id="notificationPanel" class="notification-panel" aria-live="polite"></div>
+
+</body>
+</html>

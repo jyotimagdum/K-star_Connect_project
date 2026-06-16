@@ -1,0 +1,32 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Start K-Star Backend",
+      "runtimeExecutable": "${workspaceFolder}/.tools/node-v20.19.0-win-x64/node.exe",
+      "program": "${workspaceFolder}/server.js",
+      "envFile": "${workspaceFolder}/.env",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "restart": true
+    },
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Open K-Star Frontend",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Run K-Star App",
+      "configurations": [
+        "Start K-Star Backend",
+        "Open K-Star Frontend"
+      ]
+    }
+  ]
+}
