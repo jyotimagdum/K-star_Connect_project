@@ -4,8 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>K-Star Connect</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="Style.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
 <script src="/socket.io/socket.io.js" defer></script>
+<script src="KpopData.js" defer></script>
 <script src="Script.js" defer></script>
 </head>
 <body>
@@ -30,29 +33,62 @@
 <a href="#live">Live</a>
 <a href="#tickets">Tickets</a>
 <a href="#store">Store</a>
+<a href="Cart.html">Cart</a>
 <a href="#badges">Badges</a>
 </nav>
 
 <main class="page-shell">
 <section id="auth" class="section-grid auth-grid">
-<div class="panel">
-<h2>Fan Access</h2>
-<p class="muted">Create an account or sign in to personalize your fan hub.</p>
-<form id="authForm" class="stacked-form">
-<label for="fanName">Fan name</label>
-<input id="fanName" type="text" placeholder="Mina Moon" required>
-<label for="fanEmail">Email</label>
-<input id="fanEmail" type="email" placeholder="fan@example.com" required>
-<label for="fanPassword">Password</label>
-<input id="fanPassword" type="password" placeholder="At least 6 characters" minlength="6" required>
-<div class="button-row">
-<button type="submit" data-mode="login">Login</button>
-<button type="submit" data-mode="signup" class="secondary-btn">Sign up</button>
-</div>
+<div class="panel auth-card">
+<span class="eyebrow">Fan Access</span>
+<h2>Welcome Backstage</h2>
+<p class="muted">Login if you already have an account. New fans must sign up first.</p>
+
+<ul class="nav nav-pills auth-tabs" id="authTabs" role="tablist">
+<li class="nav-item" role="presentation">
+<button class="nav-link active" id="login-tab" data-bs-toggle="pill" data-bs-target="#loginPane" type="button" role="tab">Login</button>
+</li>
+<li class="nav-item" role="presentation">
+<button class="nav-link" id="signup-tab" data-bs-toggle="pill" data-bs-target="#signupPane" type="button" role="tab">Sign up</button>
+</li>
+</ul>
+
+<div class="tab-content">
+<div class="tab-pane fade show active" id="loginPane" role="tabpanel" aria-labelledby="login-tab">
+<form id="loginForm" class="stacked-form">
+<label for="loginEmail">Email</label>
+<input id="loginEmail" type="email" placeholder="fan@example.com" required>
+<label for="loginPassword">Password</label>
+<input id="loginPassword" type="password" placeholder="Your password" minlength="6" required>
+<button type="submit">Login</button>
 </form>
 </div>
 
-<aside class="panel fan-summary">
+<div class="tab-pane fade" id="signupPane" role="tabpanel" aria-labelledby="signup-tab">
+<form id="signupForm" class="stacked-form">
+<label for="signupName">Fan name</label>
+<input id="signupName" type="text" placeholder="Mina Moon" required>
+<label for="signupEmail">Email</label>
+<input id="signupEmail" type="email" placeholder="fan@example.com" required>
+<label for="signupPassword">Password</label>
+<input id="signupPassword" type="password" placeholder="At least 6 characters" minlength="6" required>
+<label for="signupFavorite">Favorite group</label>
+<select id="signupFavorite" required>
+<option value="">Choose your bias group</option>
+<option>BTS</option>
+<option>BLACKPINK</option>
+<option>TWICE</option>
+<option>Stray Kids</option>
+</select>
+<label for="signupCountry">Country</label>
+<input id="signupCountry" type="text" placeholder="India" required>
+<button type="submit" class="secondary-btn">Create account</button>
+</form>
+</div>
+</div>
+</div>
+
+<aside class="panel fan-summary auth-visual">
 <span class="eyebrow">Current Fan</span>
 <h2 id="currentFanName">Guest Fan</h2>
 <p id="currentFanEmail" class="muted">Sign in to unlock badges, orders, votes, and comments.</p>
@@ -60,13 +96,43 @@
 </section>
 
 <div id="appContent" class="app-content app-only">
+<section id="profileSettings" class="panel profile-settings">
+<div class="section-heading">
+<div>
+<span class="eyebrow">Profile</span>
+<h2>Fan Profile Settings</h2>
+</div>
+<span id="profileBadge" class="pill">Signed in</span>
+</div>
+<form id="profileForm" class="profile-form">
+<div>
+<label for="profileName">Fan name</label>
+<input id="profileName" type="text" required>
+</div>
+<div>
+<label for="profileFavorite">Favorite group</label>
+<select id="profileFavorite">
+<option>BTS</option>
+<option>BLACKPINK</option>
+<option>TWICE</option>
+<option>Stray Kids</option>
+</select>
+</div>
+<div>
+<label for="profileCountry">Country</label>
+<input id="profileCountry" type="text" required>
+</div>
+<button type="submit">Save profile</button>
+</form>
+</section>
+
 <section id="communities" class="panel">
 <div class="section-heading">
 <div>
 <span class="eyebrow">Communities</span>
 <h2>Choose Your Idol Circle</h2>
 </div>
-<span id="selectedCommunityLabel" class="pill">BTS V Crew</span>
+<span id="selectedCommunityLabel" class="pill">ARMY Lounge</span>
 </div>
 <div id="idolGrid" class="idol-grid"></div>
 </section>
@@ -138,7 +204,7 @@
 <span id="ticketTotal" class="pill">$0 selected</span>
 </div>
 <div id="ticketGrid" class="ticket-grid"></div>
-<button id="bookTicketsBtn" type="button">Book selected tickets</button>
+<button id="bookTicketsBtn" type="button">Add selected tickets to cart</button>
 </section>
 
 <section id="store" class="panel">
@@ -150,6 +216,19 @@
 <span id="cartCount" class="pill">0 items</span>
 </div>
 <div id="merchGrid" class="merch-grid"></div>
+<a class="cart-page-link" href="Cart.html">Open cart checkout</a>
+</section>
+
+<section id="cart" class="panel">
+<div class="section-heading">
+<div>
+<span class="eyebrow">Checkout</span>
+<h2>Cart Ready To Buy</h2>
+</div>
+<span id="checkoutTotal" class="pill">$0 total</span>
+</div>
+<div id="cartItems" class="cart-items"></div>
+<a class="cart-page-link" href="Cart.html">Continue to address and payment</a>
 </section>
 
 <section id="badges" class="panel">

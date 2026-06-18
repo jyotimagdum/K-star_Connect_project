@@ -8,6 +8,7 @@ darkMode: false,
 notifications: [],
 points: 0,
 cart: [],
+ticketCart: [],
 bookedTickets: [],
 joinedLive: false,
 votes: {
@@ -20,10 +21,54 @@ posts: []
 };
 
 const idols = [
-{id: "bts-v", name: "BTS V", community: "BTS V Crew", role: "Global Artist", members: 1200, tag: "V", color: "#e84888"},
-{id: "blackpink-lisa", name: "BLACKPINK Lisa", community: "Lilies Lounge", role: "Dance Icon", members: 980, tag: "L", color: "#246fb5"},
-{id: "twice-nayeon", name: "TWICE Nayeon", community: "Pop Star Club", role: "Vocal Queen", members: 860, tag: "N", color: "#20a7a8"},
-{id: "straykids-felix", name: "Stray Kids Felix", community: "Sunshine District", role: "Performer", members: 910, tag: "F", color: "#f3b23f"}
+{
+id: "bts-v",
+name: "BTS",
+community: "ARMY Lounge",
+role: "Global pop group",
+members: 2200,
+tag: "B",
+color: "#8b5cf6",
+profile: "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=300&q=80",
+cover: "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=900&q=80",
+albums: ["2 Cool 4 Skool", "Dark & Wild", "Wings", "Love Yourself: Tear", "Map of the Soul: 7"]
+},
+{
+id: "blackpink-lisa",
+name: "BLACKPINK",
+community: "Blink Room",
+role: "Performance quartet",
+members: 1780,
+tag: "BP",
+color: "#d946ef",
+profile: "https://images.unsplash.com/photo-1521334884684-d80222895322?auto=format&fit=crop&w=300&q=80",
+cover: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=900&q=80",
+albums: ["Square One", "Square Up", "Kill This Love", "The Album", "Born Pink"]
+},
+{
+id: "twice-nayeon",
+name: "TWICE",
+community: "Once Garden",
+role: "Bright pop icons",
+members: 1560,
+tag: "T",
+color: "#c084fc",
+profile: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=300&q=80",
+cover: "https://images.unsplash.com/photo-1520872024865-3ff2805d8bb3?auto=format&fit=crop&w=900&q=80",
+albums: ["The Story Begins", "Page Two", "Twicetagram", "Fancy You", "Formula of Love"]
+},
+{
+id: "straykids-felix",
+name: "Stray Kids",
+community: "Stay Studio",
+role: "Self-producing performers",
+members: 1490,
+tag: "SKZ",
+color: "#a78bfa",
+profile: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=300&q=80",
+cover: "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=900&q=80",
+albums: ["Mixtape", "I Am NOT", "Clé 1: MIROH", "GO LIVE", "NOEASY"]
+}
 ];
 
 const ticketOptions = [
@@ -33,11 +78,15 @@ const ticketOptions = [
 ];
 
 const merchItems = [
-{id: "lightstick", name: "Official Lightstick", price: 59},
-{id: "hoodie", name: "Tour Hoodie", price: 76},
-{id: "photobook", name: "Limited Photobook", price: 42},
-{id: "bracelet", name: "Friendship Bracelet Set", price: 24}
+{id: "lightstick", name: "Official Lightstick", price: 59, image: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=600&q=80"},
+{id: "hoodie", name: "Tour Hoodie", price: 76, image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=600&q=80"},
+{id: "photobook", name: "Limited Photobook", price: 42, image: "https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=600&q=80"},
+{id: "bracelet", name: "Friendship Bracelet Set", price: 24, image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=600&q=80"}
 ];
+
+idols.splice(0, idols.length, ...window.KSTAR_DATA.groups);
+ticketOptions.splice(0, ticketOptions.length, ...window.KSTAR_DATA.ticketOptions);
+merchItems.splice(0, merchItems.length, ...window.KSTAR_DATA.merchItems);
 
 const badges = [
 {name: "First Login", text: "Signed into K-Star Connect.", points: 10},
@@ -54,6 +103,7 @@ let socket = null;
 
 document.addEventListener("DOMContentLoaded", async () => {
 bindEvents();
+bindAuthTabs();
 applyDarkMode();
 await bootstrapFromServer();
 renderAll();
@@ -100,7 +150,9 @@ notify("Backend is not connected yet. Using saved browser data.");
 }
 
 function bindEvents(){
-document.getElementById("authForm").addEventListener("submit", handleAuth);
+document.getElementById("loginForm").addEventListener("submit", handleLogin);
+document.getElementById("signupForm").addEventListener("submit", handleSignup);
+document.getElementById("profileForm").addEventListener("submit", saveProfile);
 document.getElementById("logoutBtn").addEventListener("click", logout);
 document.getElementById("darkModeToggle").addEventListener("click", toggleDarkMode);
 document.getElementById("notifyBtn").addEventListener("click", () => notify("You are all caught up."));
@@ -108,39 +160,82 @@ document.getElementById("createPostBtn").addEventListener("click", createPost);
 document.getElementById("chatForm").addEventListener("submit", sendChat);
 document.getElementById("joinLiveBtn").addEventListener("click", joinLive);
 document.getElementById("bookTicketsBtn").addEventListener("click", bookTickets);
+const checkoutBtn = document.getElementById("checkoutBtn");
+if(checkoutBtn){
+checkoutBtn.addEventListener("click", placeOrder);
+}
+}
+
+function bindAuthTabs(){
+document.querySelectorAll("[data-bs-target]").forEach(tab => {
+tab.addEventListener("click", () => {
+const target = document.querySelector(tab.dataset.bsTarget);
+document.querySelectorAll(".auth-tabs .nav-link").forEach(item => item.classList.remove("active"));
+document.querySelectorAll(".tab-pane").forEach(pane => pane.classList.remove("show", "active"));
+tab.classList.add("active");
+target.classList.add("show", "active");
+});
+});
 }
 
 function renderAll(){
 updateAuthGate();
 renderUser();
+renderProfileForm();
 renderCommunities();
 renderPosts();
 renderVotes();
 renderTickets();
 renderMerch();
+renderCart();
 renderBadges();
 renderNotificationCount();
 }
 
-async function handleAuth(event){
+async function handleLogin(event){
 event.preventDefault();
-const mode = event.submitter.dataset.mode;
-const name = document.getElementById("fanName").value.trim();
-const email = document.getElementById("fanEmail").value.trim().toLowerCase();
-const password = document.getElementById("fanPassword").value;
+const email = document.getElementById("loginEmail").value.trim().toLowerCase();
+const password = document.getElementById("loginPassword").value;
 
-if(!name || !email || password.length < 6){
-notify("Please enter a name, valid email, and a 6 character password.");
+if(!email || password.length < 6){
+notify("Enter your signed-up email and password.");
 return;
 }
 
 try{
-const endpoint = mode === "signup" ? "/api/auth/signup" : "/api/auth/login";
-const payload = mode === "signup" ? {name, email, password} : {email, password};
-const data = await api(endpoint, {method: "POST", body: JSON.stringify(payload)});
+const data = await api("/api/auth/login", {method: "POST", body: JSON.stringify({email, password})});
 applyUser(data.user);
 await bootstrapFromServer();
-notify(mode === "signup" ? `Welcome, ${state.currentUser.name}.` : `Welcome back, ${state.currentUser.name}.`);
+notify(`Welcome back, ${state.currentUser.name}.`);
+event.target.reset();
+renderAll();
+document.getElementById("communities").scrollIntoView({behavior: "smooth"});
+}catch(error){
+notify(`${error.message} If you are new, please sign up first.`);
+}
+}
+
+async function handleSignup(event){
+event.preventDefault();
+const name = document.getElementById("signupName").value.trim();
+const email = document.getElementById("signupEmail").value.trim().toLowerCase();
+const password = document.getElementById("signupPassword").value;
+const favoriteGroup = document.getElementById("signupFavorite").value;
+const country = document.getElementById("signupCountry").value.trim();
+
+if(!name || !email || password.length < 6 || !favoriteGroup || !country){
+notify("Fill in all signup details before creating your account.");
+return;
+}
+
+try{
+const data = await api("/api/auth/signup", {
+method: "POST",
+body: JSON.stringify({name, email, password, favoriteGroup, country})
+});
+applyUser(data.user);
+await bootstrapFromServer();
+notify(`Welcome, ${state.currentUser.name}. Your fan account is ready.`);
 event.target.reset();
 renderAll();
 document.getElementById("communities").scrollIntoView({behavior: "smooth"});
@@ -159,10 +254,17 @@ document.getElementById("auth").scrollIntoView({behavior: "smooth"});
 }
 
 function applyUser(user){
-state.currentUser = {id: user.id, name: user.name, email: user.email};
+state.currentUser = {
+id: user.id,
+name: user.name,
+email: user.email,
+favoriteGroup: user.favoriteGroup || "",
+country: user.country || ""
+};
 state.selectedCommunity = user.selectedCommunity || state.selectedCommunity;
 state.points = user.points || 0;
 state.cart = user.cart || [];
+state.ticketCart = user.ticketCart || state.ticketCart || [];
 state.bookedTickets = user.bookedTickets || [];
 state.joinedLive = Boolean(user.joinedLive);
 state.notifications = user.notifications || [];
@@ -172,6 +274,44 @@ saveState();
 function renderUser(){
 document.getElementById("currentFanName").innerText = state.currentUser?.name || "Guest Fan";
 document.getElementById("currentFanEmail").innerText = state.currentUser?.email || "Sign in to unlock badges, orders, votes, and comments.";
+}
+
+function renderProfileForm(){
+if(!state.currentUser){
+return;
+}
+
+document.getElementById("profileName").value = state.currentUser.name || "";
+document.getElementById("profileFavorite").value = state.currentUser.favoriteGroup || "BTS";
+document.getElementById("profileCountry").value = state.currentUser.country || "";
+document.getElementById("profileBadge").innerText = `${state.points} points`;
+}
+
+async function saveProfile(event){
+event.preventDefault();
+const name = document.getElementById("profileName").value.trim();
+const favoriteGroup = document.getElementById("profileFavorite").value;
+const country = document.getElementById("profileCountry").value.trim();
+
+if(!name || !favoriteGroup || !country){
+notify("Profile name, favorite group, and country are required.");
+return;
+}
+
+try{
+const data = await api(`/api/users/${state.currentUser.id}/profile`, {
+method: "PATCH",
+body: JSON.stringify({name, favoriteGroup, country})
+});
+applyUser(data.user);
+}catch(error){
+state.currentUser = {...state.currentUser, name, favoriteGroup, country};
+notify("Profile saved locally because backend is unavailable.");
+}
+
+saveState();
+renderAll();
+notify("Profile updated.");
 }
 
 function updateAuthGate(){
@@ -191,12 +331,16 @@ idols.forEach(idol => {
 const card = document.createElement("article");
 card.className = `idol-card ${idol.id === state.selectedCommunity ? "active" : ""}`;
 card.innerHTML = `
-<div class="idol-avatar" style="background:${idol.color}">${idol.tag}</div>
+<div class="group-cover" style="background-image:linear-gradient(180deg,rgba(42,33,64,.05),rgba(42,33,64,.45)),url('${idol.cover}')"></div>
+<div class="idol-profile-row">
+<img class="idol-avatar" src="${idol.profile}" alt="${idol.name} profile picture">
 <div>
 <h3>${idol.name}</h3>
 <p class="card-meta">${idol.role}</p>
 </div>
+</div>
 <p class="card-meta">${idol.members.toLocaleString()} fans in ${idol.community}</p>
+<div class="album-list">${Object.keys(idol.albums).map(album => `<a class="album-chip" href="Album.html?group=${encodeURIComponent(idol.id)}&album=${encodeURIComponent(album)}">${album}</a>`).join("")}</div>
 <button type="button">Join community</button>
 `;
 card.querySelector("button").addEventListener("click", () => selectCommunity(idol.id));
@@ -223,6 +367,7 @@ notify("Community saved locally because backend is unavailable.");
 saveState();
 renderAll();
 notify(`Switched to ${getSelectedIdol().community}.`);
+window.location.href = `Community.html?group=${encodeURIComponent(id)}`;
 }
 
 function getSelectedIdol(){
@@ -462,13 +607,14 @@ grid.innerHTML = "";
 ticketOptions.forEach(ticket => {
 const selected = selectedTickets.has(ticket.id);
 const booked = state.bookedTickets.includes(ticket.id);
+const inCart = state.ticketCart.includes(ticket.id);
 const card = document.createElement("article");
-card.className = `ticket-card ${selected ? "selected" : ""}`;
+card.className = `ticket-card ${selected || inCart ? "selected" : ""}`;
 card.innerHTML = `
 <h3>${ticket.city}</h3>
 <p class="card-meta">${ticket.date} - ${ticket.type}</p>
 <p class="price">$${ticket.price}</p>
-<button type="button" ${booked ? "disabled" : ""}>${booked ? "Booked" : selected ? "Selected" : "Select"}</button>
+<button type="button" ${booked || inCart ? "disabled" : ""}>${booked ? "Booked" : inCart ? "In cart" : selected ? "Selected" : "Select"}</button>
 `;
 card.querySelector("button").addEventListener("click", () => toggleTicket(ticket.id));
 grid.appendChild(card);
@@ -496,24 +642,23 @@ return;
 
 const ticketIds = Array.from(selectedTickets);
 try{
-const data = await api("/api/tickets/book", {
+const data = await api("/api/tickets/cart", {
 method: "POST",
 body: JSON.stringify({userId: state.currentUser.id, ticketIds})
 });
 applyUser(data.user);
 }catch(error){
 ticketIds.forEach(id => {
-if(!state.bookedTickets.includes(id)){
-state.bookedTickets.push(id);
+if(!state.ticketCart.includes(id) && !state.bookedTickets.includes(id)){
+state.ticketCart.push(id);
 }
 });
-state.points += 40;
 }
 
 selectedTickets.clear();
 saveState();
 renderAll();
-notify("Your concert ticket booking is confirmed.");
+notify("Selected tickets were added to your cart.");
 }
 
 function renderMerch(){
@@ -525,7 +670,7 @@ const inCart = state.cart.includes(item.id);
 const card = document.createElement("article");
 card.className = `merch-card ${inCart ? "in-cart" : ""}`;
 card.innerHTML = `
-<div class="merch-art"></div>
+<div class="merch-art" style="background-image:linear-gradient(180deg,rgba(42,33,64,.02),rgba(42,33,64,.18)),url('${item.image}')"></div>
 <h3>${item.name}</h3>
 <p class="price">$${item.price}</p>
 <button type="button">${inCart ? "Remove" : "Add to cart"}</button>
@@ -555,6 +700,61 @@ state.points += 20;
 
 saveState();
 renderAll();
+}
+
+function renderCart(){
+const container = document.getElementById("cartItems");
+const merchInCart = merchItems.filter(item => state.cart.includes(item.id));
+const ticketsInCart = ticketOptions.filter(ticket => state.ticketCart.includes(ticket.id));
+const rows = [
+...merchInCart.map(item => ({type: "Merch", name: item.name, price: item.price})),
+...ticketsInCart.map(ticket => ({type: "Ticket", name: `${ticket.city} - ${ticket.type}`, price: ticket.price}))
+];
+const total = rows.reduce((sum, item) => sum + item.price, 0);
+
+document.getElementById("checkoutTotal").innerText = `$${total} total`;
+
+if(rows.length === 0){
+container.innerHTML = `<p class="muted">Your cart is empty. Add merch or concert tickets to prepare checkout.</p>`;
+return;
+}
+
+container.innerHTML = rows.map(item => `
+<div class="cart-row">
+<div>
+<strong>${escapeHtml(item.name)}</strong>
+<span class="card-meta">${item.type}</span>
+</div>
+<span class="price">$${item.price}</span>
+</div>
+`).join("");
+}
+
+async function placeOrder(){
+const hasItems = state.cart.length > 0 || state.ticketCart.length > 0;
+const paymentMethod = document.getElementById("paymentMethod").value;
+
+if(!hasItems){
+notify("Add merch or tickets before placing an order.");
+return;
+}
+
+try{
+const data = await api("/api/checkout", {
+method: "POST",
+body: JSON.stringify({userId: state.currentUser.id, paymentMethod})
+});
+applyUser(data.user);
+}catch(error){
+state.bookedTickets = Array.from(new Set([...state.bookedTickets, ...state.ticketCart]));
+state.ticketCart = [];
+state.cart = [];
+state.points += 50;
+}
+
+saveState();
+renderAll();
+notify(`Order placed with ${paymentMethod}.`);
 }
 
 function renderBadges(){

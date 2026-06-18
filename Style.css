@@ -1,15 +1,16 @@
 :root{
---bg:#f6f7fb;
+--bg:#f8f5ff;
 --surface:#ffffff;
---surface-soft:#f0f3f8;
---text:#1e2430;
---muted:#687386;
---line:#dfe4ee;
---primary:#e84888;
---primary-dark:#bf2f69;
---accent:#20a7a8;
---gold:#f3b23f;
---shadow:0 12px 30px rgba(31,37,51,.09);
+--surface-soft:#f1eaff;
+--text:#2a2140;
+--muted:#746a89;
+--line:#e5d8fb;
+--primary:#8b5cf6;
+--primary-dark:#6d3ed6;
+--accent:#d946ef;
+--gold:#f5b84b;
+--lavender:#c4b5fd;
+--shadow:0 18px 42px rgba(108,82,166,.13);
 }
 
 *{
@@ -24,7 +25,9 @@ scroll-behavior:smooth;
 }
 
 body{
-background:var(--bg);
+background:
+radial-gradient(circle at top left,rgba(196,181,253,.55),transparent 32rem),
+linear-gradient(135deg,#fbfaff 0%,#f4edff 50%,#ffffff 100%);
 color:var(--text);
 min-height:100vh;
 }
@@ -86,7 +89,7 @@ transform:none;
 }
 
 .secondary-btn{
-background:var(--accent);
+background:linear-gradient(135deg,var(--accent),#f0abfc);
 }
 
 .ghost-btn{
@@ -102,7 +105,11 @@ gap:20px;
 align-items:center;
 padding:28px clamp(18px,4vw,48px);
 color:white;
-background:linear-gradient(135deg,#cf3277,#246fb5 55%,#12a6a7);
+background:
+linear-gradient(135deg,rgba(86,58,150,.92),rgba(139,92,246,.82) 54%,rgba(217,70,239,.78)),
+url("https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=1600&q=80");
+background-size:cover;
+background-position:center;
 }
 
 .app-header h1{
@@ -151,6 +158,59 @@ white-space:nowrap;
 background:var(--surface-soft);
 }
 
+.link-button,
+.link-button:hover{
+display:inline-flex;
+align-items:center;
+text-decoration:none;
+}
+
+.compact-header{
+min-height:240px;
+align-items:flex-end;
+}
+
+.auth-card{
+position:relative;
+overflow:hidden;
+}
+
+.auth-card:before{
+content:"";
+position:absolute;
+inset:0 0 auto auto;
+width:180px;
+height:180px;
+background:radial-gradient(circle,rgba(217,70,239,.22),transparent 68%);
+pointer-events:none;
+}
+
+.auth-tabs{
+gap:10px;
+margin:18px 0;
+}
+
+.auth-tabs .nav-link{
+color:var(--primary);
+border:1px solid var(--line);
+border-radius:999px;
+font-weight:800;
+}
+
+.auth-tabs .nav-link.active{
+background:linear-gradient(135deg,var(--primary),var(--accent));
+color:white;
+box-shadow:0 12px 24px rgba(139,92,246,.2);
+}
+
+.auth-visual{
+background:
+linear-gradient(160deg,rgba(255,255,255,.92),rgba(246,239,255,.72)),
+url("https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1000&q=80");
+background-size:cover;
+background-position:center;
+}
+
 .page-shell{
 display:grid;
 gap:22px;
@@ -160,6 +220,13 @@ padding:22px clamp(14px,4vw,48px) 50px;
 .app-content{
 display:grid;
 gap:22px;
+}
+
+.profile-form{
+display:grid;
+grid-template-columns:repeat(4,minmax(160px,1fr));
+gap:12px;
+align-items:end;
 }
 
 .section-grid{
@@ -291,6 +358,7 @@ padding:16px;
 .idol-card{
 display:grid;
 gap:12px;
+overflow:hidden;
 }
 
 .idol-card.active{
@@ -299,15 +367,50 @@ box-shadow:0 0 0 3px rgba(232,72,136,.16);
 }
 
 .idol-avatar{
-width:70px;
-height:70px;
+width:86px;
+height:86px;
 border-radius:50%;
-display:grid;
-place-items:center;
-color:white;
-font-size:1.35rem;
-font-weight:900;
+object-fit:cover;
+border:4px solid white;
+box-shadow:0 8px 22px rgba(91,62,148,.22);
+}
+
+.group-cover{
+height:140px;
+border-radius:8px;
+background-size:cover;
+background-position:center;
+margin:-16px -16px 0;
+}
+
+.idol-profile-row{
+display:flex;
+align-items:center;
+gap:12px;
+margin-top:-34px;
+}
+
+.album-list{
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+}
+
+.album-chip{
+display:inline-flex;
+padding:6px 9px;
+border-radius:999px;
+background:white;
+border:1px solid var(--line);
+color:var(--primary-dark);
+font-size:.78rem;
+font-weight:800;
+text-decoration:none;
+}
+
+.album-chip:hover{
 background:linear-gradient(135deg,var(--primary),var(--accent));
+color:white;
 }
 
 .card-meta{
@@ -412,8 +515,8 @@ padding:24px;
 border-radius:8px;
 color:white;
 background:
-linear-gradient(180deg,rgba(0,0,0,.1),rgba(0,0,0,.72)),
-linear-gradient(135deg,#2a6bb7,#d9367f 52%,#f0b33e);
+linear-gradient(180deg,rgba(42,33,64,.08),rgba(42,33,64,.74)),
+linear-gradient(135deg,#a78bfa,#d946ef 52%,#ffffff);
 }
 
 .live-badge{
@@ -454,7 +557,99 @@ margin:10px 0;
 height:110px;
 border-radius:8px;
 margin-bottom:12px;
-background:linear-gradient(135deg,#f7c65f,#df4f89 55%,#2eb1b0);
+background-size:cover;
+background-position:center;
+background-image:linear-gradient(135deg,#ddd6fe,#f5d0fe 55%,#ffffff);
+}
+
+.cart-items{
+display:grid;
+gap:12px;
+}
+
+.cart-row{
+display:grid;
+grid-template-columns:1fr auto;
+gap:12px;
+align-items:center;
+padding:13px 14px;
+border:1px solid var(--line);
+border-radius:8px;
+background:var(--surface-soft);
+}
+
+.cart-row strong{
+display:block;
+}
+
+.checkout-box{
+display:grid;
+grid-template-columns:1fr auto;
+gap:12px;
+align-items:end;
+margin-top:16px;
+padding-top:16px;
+border-top:1px solid var(--line);
+}
+
+.cart-page-link{
+display:inline-flex;
+justify-content:center;
+width:100%;
+margin-top:16px;
+padding:12px 14px;
+border-radius:8px;
+background:linear-gradient(135deg,var(--primary),var(--accent));
+color:white;
+font-weight:800;
+text-decoration:none;
+}
+
+.address-form{
+display:grid;
+grid-template-columns:repeat(2,minmax(220px,1fr));
+gap:12px;
+}
+
+.address-form button,
+.address-form label[for="addressLine"],
+.address-form #addressLine{
+grid-column:1/-1;
+}
+
+.song-list{
+display:grid;
+gap:10px;
+}
+
+.song-row{
+display:grid;
+grid-template-columns:54px 1fr;
+gap:12px;
+align-items:center;
+padding:13px 14px;
+border:1px solid var(--line);
+border-radius:8px;
+background:var(--surface-soft);
+}
+
+.song-row span{
+color:var(--primary);
+font-weight:900;
+}
+
+.joined-community{
+display:flex;
+gap:18px;
+align-items:center;
+}
+
+.joined-community-img{
+width:150px;
+height:150px;
+border-radius:8px;
+object-fit:cover;
+box-shadow:var(--shadow);
 }
 
 .badge-card{
@@ -499,7 +694,9 @@ grid-template-columns:1fr;
 }
 
 .section-grid,
-.auth-grid{
+.auth-grid,
+.profile-form,
+.address-form{
 grid-template-columns:1fr;
 }
 
@@ -515,15 +712,31 @@ align-items:flex-start;
 
 .header-actions,
 .button-row,
-.chat-form{
+.chat-form,
+.checkout-box{
 width:100%;
 grid-template-columns:1fr;
 }
 
 .header-actions button,
 .button-row button,
-.chat-form button{
+.chat-form button,
+.checkout-box button{
 width:100%;
+}
+
+.cart-row{
+grid-template-columns:1fr;
+}
+
+.joined-community{
+align-items:flex-start;
+flex-direction:column;
+}
+
+.joined-community-img{
+width:100%;
+height:220px;
 }
 
 .panel{

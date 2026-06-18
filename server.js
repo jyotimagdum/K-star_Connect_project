@@ -35,9 +35,20 @@ const userSchema = new mongoose.Schema({
 name: {type: String, required: true, trim: true},
 email: {type: String, required: true, unique: true, lowercase: true, trim: true},
 passwordHash: {type: String, required: true},
+favoriteGroup: {type: String, default: ""},
+country: {type: String, default: ""},
+address: {
+fullName: {type: String, default: ""},
+phone: {type: String, default: ""},
+line1: {type: String, default: ""},
+city: {type: String, default: ""},
+state: {type: String, default: ""},
+postalCode: {type: String, default: ""}
+},
 selectedCommunity: {type: String, default: "bts-v"},
 points: {type: Number, default: 0},
 cart: [{type: String}],
+ticketCart: [{type: String}],
 bookedTickets: [{type: String}],
 joinedLive: {type: Boolean, default: false},
 notifications: [{
@@ -85,10 +96,10 @@ res.json({ok: true, database: mongoose.connection.readyState === 1 ? "connected"
 
 app.post("/api/auth/signup", async (req, res) => {
 try{
-const {name, email, password} = req.body;
+const {name, email, password, favoriteGroup, country} = req.body;
 
-if(!name || !email || !password || password.length < 6){
-return res.status(400).json({message: "Name, email, and a 6 character password are required."});
+if(!name || !email || !password || password.length < 6 || !favoriteGroup || !country){
+return res.status(400).json({message: "Name, email, password, favorite group, and country are required."});
 }
 
 const existingUser = await User.findOne({email: email.toLowerCase()});
@@ -101,6 +112,8 @@ const user = await User.create({
 name,
 email,
 passwordHash,
+favoriteGroup,
+country,
 points: 10,
 notifications: [{message: "First Login badge unlocked."}]
 });
@@ -162,6 +175,23 @@ user.selectedCommunity = req.body.communityId;
 user.points += 15;
 pushNotification(user, "Community activity points added.");
 await user.save();
+res.json({user: serializeUser(user)});
+});
+
+app.patch("/api/users/:userId/profile", async (req, res) => {
+const user = await User.findById(req.params.userId);
+const {name, favoriteGroup, country} = req.body;
+
+if(!user || !name || !favoriteGroup || !country){
+return res.status(400).json({message: "Name, favorite group, and country are required."});
+}
+
+user.name = name;
+user.favoriteGroup = favoriteGroup;
+user.country = country;
+pushNotification(user, "Profile updated.");
+await user.save();
+
 res.json({user: serializeUser(user)});
 });
 
@@ -268,6 +298,25 @@ await user.save();
 res.json({user: serializeUser(user)});
 });
 
+app.post("/api/tickets/cart", async (req, res) => {
+const user = await User.findById(req.body.userId);
+const ticketIds = Array.isArray(req.body.ticketIds) ? req.body.ticketIds : [];
+
+if(!user || ticketIds.length === 0){
+return res.status(400).json({message: "User and tickets are required."});
+}
+
+ticketIds.forEach(ticketId => {
+if(!user.ticketCart.includes(ticketId) && !user.bookedTickets.includes(ticketId)){
+user.ticketCart.push(ticketId);
+}
+});
+pushNotification(user, "Tickets added to cart.");
+await user.save();
+
+res.json({user: serializeUser(user)});
+});
+
 app.post("/api/cart/toggle", async (req, res) => {
 const user = await User.findById(req.body.userId);
 const itemId = req.body.itemId;
@@ -298,6 +347,34 @@ return res.status(404).json({message: "User not found."});
 user.joinedLive = true;
 user.points += 30;
 pushNotification(user, "You joined the live stream watch party.");
+await user.save();
+
+res.json({user: serializeUser(user)});
+});
+
+app.post("/api/checkout", async (req, res) => {
+const user = await User.findById(req.body.userId);
+const paymentMethod = req.body.paymentMethod || "card";
+const address = req.body.address || {};
+
+if(!user){
+return res.status(404).json({message: "User not found."});
+}
+
+if(!address.fullName || !address.phone || !address.line1 || !address.city || !address.state || !address.postalCode){
+return res.status(400).json({message: "Complete delivery address is required."});
+}
+
+user.ticketCart.forEach(ticketId => {
+if(!user.bookedTickets.includes(ticketId)){
+user.bookedTickets.push(ticketId);
+}
+});
+user.ticketCart = [];
+user.cart = [];
+user.address = address;
+user.points += 50;
+pushNotification(user, `Order placed with ${paymentMethod}.`);
 await user.save();
 
 res.json({user: serializeUser(user)});
@@ -372,9 +449,13 @@ return {
 id: user._id.toString(),
 name: user.name,
 email: user.email,
+favoriteGroup: user.favoriteGroup,
+country: user.country,
+address: user.address,
 selectedCommunity: user.selectedCommunity,
 points: user.points,
 cart: user.cart,
+ticketCart: user.ticketCart,
 bookedTickets: user.bookedTickets,
 joinedLive: user.joinedLive,
 notifications: user.notifications.map(item => ({
